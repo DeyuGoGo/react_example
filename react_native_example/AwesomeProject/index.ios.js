@@ -7,46 +7,142 @@
 var React = require('react-native');
 var {
   AppRegistry,
+  TextInput,
+  ListView,
   StyleSheet,
+  TouchableHighlight,
   Text,
   View,
 } = React;
-
+var REQUEST_URL2 = 'http://104.155.238.153:3000/api/comments';
 var AwesomeProject = React.createClass({
+  getInitialState: function() {
+    return {
+      dataSource: new ListView.DataSource({
+        rowHasChanged: (row1, row2) => row1 !== row2,
+      }),
+      loaded: false,
+    };
+  },
+
+  componentDidMount: function() {
+    this.fetchData();
+  },
+
+  fetchData: function() {
+    fetch(REQUEST_URL2)
+      .then((response) => response.json())
+      .then((responseData) => {
+        console.log(responseData);
+        this.setState({
+          dataSource: this.state.dataSource.cloneWithRows(responseData),
+          loaded: true,
+        });
+      })
+      .done();
+  },
+  postMessage: function( autohr , message) {
+    fetch(REQUEST_URL2,{
+      method: 'post',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        author: autohr,
+        text: message,
+      })
+    })
+      .then((response) => response.json())
+      .then((responseData) => {
+        console.log(responseData);
+        this.setState({
+          dataSource: this.state.dataSource.cloneWithRows(responseData),
+          loaded: true,
+        });
+      })
+      .done();
+  },
+  _onPressButton: function(){
+    this.postMessage(this.state.author , this.state.message);
+  },
+
   render: function() {
+    if (!this.state.loaded) {
+      return this.renderLoadingView();
+    }
+
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>
-          Welcome to React Native!
-        </Text>
-        <Text style={styles.instructions}>
-          To get started, edit index.ios.js
-        </Text>
-        <Text style={styles.instructions}>
-          Press Cmd+R to reload,{'\n'}
-          Cmd+D or shake for dev menu
-        </Text>
+      <ListView
+        dataSource={this.state.dataSource}
+        renderRow={this.renderMovie}
+        style={styles.listView}/>
+         <TextInput
+         placeholder="Enter Name"
+         style={styles.inputText}
+         onChangeText={(text) => this.setState({author:text})}
+         value={this.state.author}/>
+         <TextInput
+         placeholder="Enter Message"
+         style={styles.inputText}
+         onChangeText={(text) => this.setState({message:text})}
+         value={this.state.message}/>
+        <TouchableHighlight onPress={this._onPressButton}>
+        <View style={{width: 150, height: 100, backgroundColor: 'red'}}>
+        <Text style={{margin: 30}}>Button</Text>
+      </View>
+    </TouchableHighlight>
       </View>
     );
+  },
+  renderMovie: function(message) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.rightContainer}>
+          <Text style={styles.author}>{message.author}
+          </Text>
+          <Text style={styles.message}>{message.text}</Text>
+        </View>
+      </View>
+    );
+  },
+  renderLoadingView: function(){
+    return(
+            <View style={styles.container}>
+            <Text style={styles.author}>Loading</Text>
+            </View>
+      )
   }
 });
 
 var styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
   },
-  welcome: {
+  author: {
     fontSize: 20,
+    marginBottom: 8,
     textAlign: 'center',
-    margin: 10,
   },
-  instructions: {
+  message: {
     textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
+  },
+  listView: {
+    flex: 3,
+    paddingTop: 20,
+    backgroundColor: '#F5FCFF',
+  },
+  inputText: {
+    height: 26,
+    borderWidth: 0.5,
+    borderColor: '#0f0f0f',
+    padding: 4,
+    flex: 1,
+    fontSize: 13,
   },
 });
 
