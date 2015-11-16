@@ -8,19 +8,13 @@ var React = require('react-native');
 var {
   AppRegistry,
   TextInput,
-  Image,
   ListView,
   StyleSheet,
+  TouchableNativeFeedback,
   Text,
   View,
 } = React;
-
-var API_KEY = '7waqfqbprs7pajbz28mqf6vz';
-var API_URL = 'http://api.rottentomatoes.com/api/public/v1.0/lists/movies/in_theaters.json';
-var PAGE_SIZE = 25;
-var PARAMS = '?apikey=' + API_KEY + '&page_limit=' + PAGE_SIZE;
 var REQUEST_URL2 = 'http://104.155.238.153:3000/api/comments';
-var REQUEST_URL = API_URL + PARAMS;
 var AwesomeProject = React.createClass({
   getInitialState: function() {
     return {
@@ -47,7 +41,7 @@ var AwesomeProject = React.createClass({
       })
       .done();
   },
-  postMessage: function(message) {
+  postMessage: function( autohr , message) {
     fetch(REQUEST_URL2,{
       method: 'post',
       headers: {
@@ -55,7 +49,7 @@ var AwesomeProject = React.createClass({
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        author: 'Deyu',
+        author: autohr,
         text: message,
       })
     })
@@ -68,6 +62,9 @@ var AwesomeProject = React.createClass({
         });
       })
       .done();
+  },
+  _onPressButton: function(){
+    this.postMessage(this.state.author , this.state.message);
   },
 
   render: function() {
@@ -82,39 +79,43 @@ var AwesomeProject = React.createClass({
         renderRow={this.renderMovie}
         style={styles.listView}/>
          <TextInput
-         placeholder="Enter text to see events"
+         placeholder="Enter Name"
          style={styles.inputText}
-         onChangeText={(text) => this.setState({text})}
-         onSubmitEditing={(event) => {
-          this.postMessage(this.state.text);
-            }
-        }
-         value={this.state.text}/>
+         onChangeText={(text) => this.setState({author:text})}
+         value={this.state.author}/>
+         <TextInput
+         placeholder="Enter Message"
+         style={styles.inputText}
+         onChangeText={(text) => this.setState({message:text})}
+         value={this.state.message}/>
+          <TouchableNativeFeedback
+        onPress={this._onPressButton}
+        background={TouchableNativeFeedback.SelectableBackground()}>
+        <View style={{width: 150, height: 100, backgroundColor: 'red'}}>
+        <Text style={{margin: 30}}>Button</Text>
+      </View>
+    </TouchableNativeFeedback>
       </View>
     );
   },
-
-  renderLoadingView: function() {
-    return (
-      <View style={styles.container}>
-        <Text>
-          Loading movies...
-        </Text>
-      </View>
-    );
-  },
-
   renderMovie: function(message) {
     return (
       <View style={styles.container}>
         <View style={styles.rightContainer}>
-          <Text style={styles.title}>{message.author}
+          <Text style={styles.author}>{message.author}
           </Text>
-          <Text style={styles.year}>{message.text}</Text>
+          <Text style={styles.message}>{message.text}</Text>
         </View>
       </View>
     );
   },
+  renderLoadingView: function(){
+    return(
+            <View style={styles.container}>
+            <Text style={styles.author}>Loading</Text>
+            </View>
+      )
+  }
 });
 
 var styles = StyleSheet.create({
@@ -125,20 +126,13 @@ var styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
   },
-  rightContainer: {
-    flex: 1,
-  },
-  title: {
+  author: {
     fontSize: 20,
     marginBottom: 8,
     textAlign: 'center',
   },
-  year: {
+  message: {
     textAlign: 'center',
-  },
-  thumbnail: {
-    width: 53,
-    height: 81,
   },
   listView: {
     paddingTop: 20,
